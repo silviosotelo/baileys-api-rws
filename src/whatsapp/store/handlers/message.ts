@@ -58,15 +58,17 @@ export default function messageHandler(sessionId: string, event: BaileysEventEmi
 						const jid = jidNormalizedUser(message.key.remoteJid!);
 						const data = transformPrisma(message) as MakeTransformedPrisma<Message>;
 
+						const { newsletter, platform, ...cleanData } = data as any;
+
 						await model.upsert({
 							select: { pkId: true },
 							create: {
-								...data,
+								...cleanData,
 								remoteJid: jid,
 								id: message.key.id!,
 								sessionId,
 							},
-							update: { ...data },
+							update: { ...cleanData },
 							where: {
 								sessionId_remoteJid_id: {
 									remoteJid: jid,
