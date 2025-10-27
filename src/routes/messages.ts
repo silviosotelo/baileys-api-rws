@@ -55,4 +55,67 @@ router.delete(
 	message.deleteMessage,
 );
 
+router.post(
+	"/send/buttons",
+	body("jid").isString().notEmpty(),
+	body("type").isString().isIn(["group", "number"]).optional(),
+	body("text").isString().notEmpty(),
+	body("footer").isString().optional(),
+	body("buttons").isArray({ min: 1, max: 3 }).notEmpty(),
+	body("buttons.*.text").isString().notEmpty(),
+	body("buttons.*.id").isString().optional(),
+	requestValidator,
+	sessionValidator,
+	message.sendWithButtons,
+);
+
+router.post(
+	"/send/list",
+	body("jid").isString().notEmpty(),
+	body("type").isString().isIn(["group", "number"]).optional(),
+	body("text").isString().notEmpty(),
+	body("footer").isString().optional(),
+	body("buttonText").isString().optional(),
+	body("sections").isArray({ min: 1 }).notEmpty(),
+	body("sections.*.title").isString().notEmpty(),
+	body("sections.*.rows").isArray({ min: 1, max: 10 }).notEmpty(),
+	body("sections.*.rows.*.title").isString().notEmpty(),
+	body("sections.*.rows.*.description").isString().optional(),
+	body("sections.*.rows.*.id").isString().optional(),
+	requestValidator,
+	sessionValidator,
+	message.sendWithList,
+);
+
+router.post(
+	"/send/template-buttons",
+	body("jid").isString().notEmpty(),
+	body("type").isString().isIn(["group", "number"]).optional(),
+	body("text").isString().notEmpty(),
+	body("footer").isString().optional(),
+	body("buttons").isArray({ min: 1, max: 3 }).notEmpty(),
+	body("buttons.*.type").isString().isIn(["url", "call", "reply"]).notEmpty(),
+	body("buttons.*.text").isString().notEmpty(),
+	body("buttons.*.url").isString().optional(),
+	body("buttons.*.phoneNumber").isString().optional(),
+	body("buttons.*.id").isString().optional(),
+	requestValidator,
+	sessionValidator,
+	message.sendWithTemplateButtons,
+);
+
+router.post(
+	"/send/link",
+	body("jid").isString().notEmpty(),
+	body("type").isString().isIn(["group", "number"]).optional(),
+	body("text").isString().notEmpty(),
+	body("url").isURL().notEmpty(),
+	body("title").isString().optional(),
+	body("description").isString().optional(),
+	body("thumbnail").isString().optional(),
+	requestValidator,
+	sessionValidator,
+	message.sendWithLink,
+);
+
 export default router;

@@ -125,7 +125,6 @@ export const download: RequestHandler = async (req, res) => {
     }
 };
 
-// TODO: Added validation for message objects in the delete message and delete message only me functions.
 export const deleteMessage: RequestHandler = async (req, res) => {
 	try {
 		const { sessionId } = req.params;
@@ -208,6 +207,177 @@ export const deleteMessageForMe: RequestHandler = async (req, res) => {
 	} catch (e) {
 		const message = "An error occured during message delete";
 		logger.error(e, message);
+		res.status(500).json({ error: message });
+	}
+};
+
+export const sendWithButtons: RequestHandler = async (req, res) => {
+	try {
+		const { jid, type = "number", text, footer, buttons } = req.body;
+		const sessionId = req.params.sessionId;
+		const session = WhatsappService.getSession(sessionId)!;
+
+		const validJid = await WhatsappService.validJid(session, jid, type);
+		if (!validJid) return res.status(400).json({ error: "JID does not exists" });
+
+		await updatePresence(session, WAPresence.Available, validJid);
+
+		// Formato de botones legacy (puede no funcionar en versiones nuevas de WA)
+		const message = {
+			text,
+			footer: footer || "",
+			buttons: buttons.map((btn: any, index: number) => ({
+				buttonId: btn.id || `btn_${index}`,
+				buttonText: { displayText: btn.text },
+				type: 1,
+			})),
+			headerType: 1,
+		};
+
+		const result = await session.sendMessage(validJid, message);
+		emitEvent("send.message", sessionId, { jid: validJid, result });
+		res.status(200).json({
+			result,
+			warning: "Los botones tradicionales pueden no funcionar en versiones recientes de WhatsApp",
+		});
+	} catch (e) {
+		const message = "An error occured during message send with buttons";
+		logger.error(e, message);
+		emitEvent("send.message", req.params.sessionId, undefined, "error", message + ": " + e.message);
+		res.status(500).json({ error: message });
+	}
+};
+
+export const sendWithList: RequestHandler = async (req, res) => {
+	try {
+		const { jid, type = "number", text, footer, buttonText, sections } = req.body;
+		const sessionId = req.params.sessionId;
+		const session = WhatsappService.getSession(sessionId)!;
+
+		const validJid = await WhatsappService.validJid(session, jid, type);
+		if (!validJid) return res.status(400).json({ error: "JID does not exists" });
+
+		await updatePresence(session, WAPresence.Available, validJid);
+
+		const message = {
+			text,
+			footer: footer || "",
+			title: text,
+			buttonText: buttonText || "Ver opciones",
+			sections: sections.map((section: any) => ({
+				title: section.title,
+				rows: section.rows.map((row: any) => ({
+					title: row.title,
+					description: row.description || "",
+					rowId: row.id || row.title,
+				})),
+			})),
+		};
+
+		const result = await session.sendMessage(validJid, message);
+		emitEvent("send.message", sessionId, { jid: validJid, result });
+		res.status(200).json({
+			result,
+			warning: "Las listas pueden no funcionar en versiones recientes de WhatsApp",
+		});
+	} catch (e) {
+		const message = "An error occured during message send with list";
+		logger.error(e, message);
+		emitEvent("send.message", req.params.sessionId, undefined, "error", message + ": " + e.message);
+		res.status(500).json({ error: message });
+	}
+};
+
+export const sendWithTemplateButtons: RequestHandler = async (req, res) => {
+	try {
+		const { jid, type = "number", text, footer, buttons } = req.body;
+		const sessionId = req.params.sessionId;
+		const session = WhatsappService.getSession(sessionId)!;
+
+		const validJid = await WhatsappService.validJid(session, jid, type);
+		if (!validJid) return res.status(400).json({ error: "JID does not exists" });
+
+		await updatePresence(session, WAPresence.Available, validJid);
+
+		const templateButtons = buttons.map((btn: any, index: number) => {
+			if (btn.type === "url") {
+				return {
+					index: index + 1,
+					urlButton: {
+						displayText: btn.text,
+						url: btn.url,
+					},
+				};
+			} else if (btn.type === "call") {
+				return {
+					index: index + 1,
+					callButton: {
+						displayText: btn.text,
+						phoneNumber: btn.phoneNumber,
+					},
+				};
+			} else {
+				return {
+					index: index + 1,
+					quickReplyButton: {
+						displayText: btn.text,
+						id: btn.id || `btn_${index}`,
+					},
+				};
+			}
+		});
+
+		const message = {
+			text,
+			footer: footer || "",
+			templateButtons,
+		};
+
+		const result = await session.sendMessage(validJid, message);
+		emitEvent("send.message", sessionId, { jid: validJid, result });
+		res.status(200).json({ result });
+	} catch (e) {
+		const message = "An error occured during message send with template buttons";
+		logger.error(e, message);
+		emitEvent("send.message", req.params.sessionId, undefined, "error", message + ": " + e.message);
+		res.status(500).json({ error: message });
+	}
+};
+
+export const sendWithLink: RequestHandler = async (req, res) => {
+	try {
+		const { jid, type = "number", text, url, title, description, thumbnail } = req.body;
+		const sessionId = req.params.sessionId;
+		const session = WhatsappService.getSession(sessionId)!;
+
+		const validJid = await WhatsappService.validJid(session, jid, type);
+		if (!validJid) return res.status(400).json({ error: "JID does not exists" });
+
+		await updatePresence(session, WAPresence.Available, validJid);
+
+		// Opción 1: Mensaje simple con texto que incluye URL (preview automático)
+		if (!title && !description) {
+			const message = {
+				text: `${text}\n\n${url}`,
+			};
+			const result = await session.sendMessage(validJid, message);
+			emitEvent("send.message", sessionId, { jid: validJid, result });
+			return res.status(200).json({ result });
+		}
+
+		// Opción 2: Preview personalizado usando matchedText
+		const message: any = {
+			text: `${text}\n\n${url}`,
+			matchedText: url,
+		};
+
+		const result = await session.sendMessage(validJid, message);
+		emitEvent("send.message", sessionId, { jid: validJid, result });
+		res.status(200).json({ result });
+	} catch (e) {
+		const message = "An error occured during message send with link";
+		logger.error(e, message);
+		emitEvent("send.message", req.params.sessionId, undefined, "error", message + ": " + e.message);
 		res.status(500).json({ error: message });
 	}
 };
