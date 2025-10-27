@@ -1,5 +1,5 @@
-import type { proto, WAGenericMediaMessage, WAMessage } from "@whiskeysockets/baileys";
-import { downloadMediaMessage } from "@whiskeysockets/baileys";
+import type { WAGenericMediaMessage, WAMessage } from "@itsukichan/baileys";
+import { downloadMediaMessage, proto } from "@itsukichan/baileys";
 import { serializePrisma, delay as delayMs, logger, emitEvent } from "@/utils";
 import type { RequestHandler } from "express";
 import type { Message } from "@prisma/client";
@@ -65,7 +65,7 @@ export const send: RequestHandler = async (req, res) => {
 export const sendBulk: RequestHandler = async (req, res) => {
 	const { sessionId } = req.params;
 	const session = WhatsappService.getSession(sessionId)!;
-	const results: { index: number; result: proto.WebMessageInfo | undefined }[] = [];
+	const results: { index: number; result: any }[] = [];
 	const errors: { index: number; error: string }[] = [];
 
 	for (const [
@@ -103,7 +103,7 @@ export const download: RequestHandler = async (req, res) => {
     try {
         const session = WhatsappService.getSession(req.params.sessionId)!;
         const message = req.body as WAMessage;
-        const type = Object.keys(message.message!)[0] as keyof proto.IMessage;
+        const type = Object.keys(message.message!)[0] as string;
         const content = message.message![type] as WAGenericMediaMessage;
         const buffer = await downloadMediaMessage(
             message,

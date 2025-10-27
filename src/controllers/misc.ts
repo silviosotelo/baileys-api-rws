@@ -13,7 +13,7 @@ export const makePhotoURLHandler =
 			const exists = await WhatsappService.jidExists(session, jid, type);
 			if (!exists) return res.status(400).json({ error: "Jid does not exists" });
 
-			const url = await session.profilePictureUrl(jid, "image");
+			const url = await session.profilePictureUrl(jid);
 			res.status(200).json({ url });
 		} catch (e) {
 			const message = "An error occured during photo fetch";

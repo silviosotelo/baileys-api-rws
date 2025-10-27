@@ -2,9 +2,10 @@ import makeWASocket, {
 	DisconnectReason,
 	isJidBroadcast,
 	makeCacheableSignalKeyStore,
-	fetchLatestBaileysVersion
-} from "@whiskeysockets/baileys";
-import type { ConnectionState, SocketConfig, WASocket, proto } from "@whiskeysockets/baileys";
+	fetchLatestBaileysVersion,
+	proto
+} from "@itsukichan/baileys";
+import type { ConnectionState, SocketConfig, WASocket } from "@itsukichan/baileys";
 import { Store, useSession } from "./store";
 import { prisma } from "@/config/database";
 import { logger, delay, emitEvent } from "@/utils";
@@ -210,7 +211,7 @@ static async createSession(options: createSessionOptions) {
 			const data = await prisma.message.findFirst({
 				where: { remoteJid: key.remoteJid!, id: key.id!, sessionId },
 			});
-			return (data?.message || undefined) as proto.IMessage | undefined;
+			return (data?.message || undefined) as any;
 		},
 	});
 
@@ -298,9 +299,9 @@ static async createSession(options: createSessionOptions) {
 	static async validJid(session: Session, jid: string, type: "group" | "number" = "number") {
 		try {
 			if (type === "number") {
-				const [result] = await session.onWhatsApp(jid);
-				if (result?.exists) {
-					return result.jid;
+				const results = await (session as any).onWhatsApp(jid);
+				if (results && results.length > 0 && results[0]?.exists) {
+					return results[0].jid;
 				} else {
 					return null;
 				}

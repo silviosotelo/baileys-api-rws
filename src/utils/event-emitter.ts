@@ -16,7 +16,13 @@ export function emitEvent(
 	message?: string,
 ) {
 	if (env.ENABLE_WEBHOOK) {
-		sendWebhook(event, sessionId, data, status, message);
+		const shouldSendWebhook = env.WEBHOOK_EVENTS_FILTER
+			? env.WEBHOOK_EVENTS_FILTER.includes(event)
+			: true;
+
+		if (shouldSendWebhook) {
+			sendWebhook(event, sessionId, data, status, message);
+		}
 	}
 
 	if (!socketServer) {

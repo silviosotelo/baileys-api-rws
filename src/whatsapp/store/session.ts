@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { 
-    AuthenticationCreds, 
-    AuthenticationState, 
-    SignalDataTypeMap 
-} from "@whiskeysockets/baileys";  // Actualizado
-import { proto } from "@whiskeysockets/baileys";  // Actualizado
-import { 
-    BufferJSON, 
-    initAuthCreds 
-} from "@whiskeysockets/baileys";  // Actualizado
+import type {
+    AuthenticationCreds,
+    AuthenticationState,
+    SignalDataTypeMap
+} from "@itsukichan/baileys";
+import { proto } from "@itsukichan/baileys";
+import {
+    BufferJSON,
+    initAuthCreds
+} from "@itsukichan/baileys";
 import { prisma } from "@/config/database";
 import { logger } from "@/utils";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";

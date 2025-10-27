@@ -1,4 +1,4 @@
-import type { BaileysEventEmitter } from "@whiskeysockets/baileys";  // Actualizado
+import type { BaileysEventEmitter } from "@itsukichan/baileys";
 import type { BaileysEventHandler } from "@/types";
 import { transformPrisma, logger, emitEvent } from "@/utils";
 import { prisma } from "@/config/database";

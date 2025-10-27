@@ -10,6 +10,7 @@ interface CustomProcessEnv {
 	URL_WEBHOOK?: string;
 	ENABLE_WEBHOOK?: boolean;
 	ENABLE_WEBSOCKET?: boolean;
+	WEBHOOK_EVENTS_FILTER?: string[];
 	BOT_NAME?: string;
 	DATABASE_URL?: string;
 	LOG_LEVEL?: LogLevel;
@@ -27,6 +28,7 @@ const envSchema = z
 		URL_WEBHOOK: z.string().optional(),
 		ENABLE_WEBHOOK: z.boolean(),
 		ENABLE_WEBSOCKET: z.boolean(),
+		WEBHOOK_EVENTS_FILTER: z.array(z.string()).optional(),
 		BOT_NAME: z.string().optional().default("Baileys Bot"),
 		DATABASE_URL: z.string(),
 		LOG_LEVEL: z.nativeEnum(LogLevel).default(LogLevel.INFO),
@@ -52,6 +54,9 @@ const processEnv: Partial<CustomProcessEnv> = {
 	URL_WEBHOOK: process.env.URL_WEBHOOK,
 	ENABLE_WEBHOOK: process.env.ENABLE_WEBHOOK === "true",
 	ENABLE_WEBSOCKET: process.env.ENABLE_WEBSOCKET === "true",
+	WEBHOOK_EVENTS_FILTER: process.env.WEBHOOK_EVENTS_FILTER
+		? process.env.WEBHOOK_EVENTS_FILTER.split(",").map((e) => e.trim())
+		: undefined,
 	BOT_NAME: process.env.BOT_NAME,
 	DATABASE_URL: process.env.DATABASE_URL,
 	LOG_LEVEL: process.env.LOG_LEVEL as LogLevel,

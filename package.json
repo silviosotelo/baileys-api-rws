@@ -45,8 +45,8 @@
 	"homepage": "https://github.com/nizarfadlan/baileys-api#readme",
 	"dependencies": {
 		"@hapi/boom": "^10.0.1",
+		"@itsukichan/baileys": "^7.3.2",
 		"@prisma/client": "^6.17.1",
-		"@whiskeysockets/baileys": "^6.7.20",
 		"axios": "^1.7.7",
 		"cors": "^2.8.5",
 		"dotenv": "^16.4.5",

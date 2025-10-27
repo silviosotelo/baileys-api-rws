@@ -1,4 +1,4 @@
-import type { BaileysEventEmitter } from "@whiskeysockets/baileys";  // Actualizado
+import type { BaileysEventEmitter } from "@itsukichan/baileys";
 import * as handlers from "./handlers";
 
 export class Store {

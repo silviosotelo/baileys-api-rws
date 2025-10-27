@@ -1,13 +1,13 @@
-import type { 
-    BaileysEventEmitter, 
-    MessageUserReceipt, 
-    proto, 
-    WAMessageKey 
-} from "@whiskeysockets/baileys";
-import { 
-    jidNormalizedUser, 
-    toNumber 
-} from "@whiskeysockets/baileys";
+import type {
+    BaileysEventEmitter,
+    MessageUserReceipt,
+    WAMessageKey
+} from "@itsukichan/baileys";
+import {
+    jidNormalizedUser,
+    toNumber,
+    proto
+} from "@itsukichan/baileys";
 import type { BaileysEventHandler, MakeTransformedPrisma } from "@/types";
 import { transformPrisma, logger, emitEvent } from "@/utils";
 import { prisma } from "@/config/database";
@@ -114,7 +114,7 @@ export default function messageHandler(sessionId: string, event: BaileysEventEmi
 						return logger.info({ update }, "Got update for non existent message");
 					}
 
-					const data = { ...prevData, ...update } as proto.IWebMessageInfo;
+					const data = { ...prevData, ...update } as any;
 					await tx.message.delete({
 						select: { pkId: true },
 						where: {
@@ -246,7 +246,7 @@ export default function messageHandler(sessionId: string, event: BaileysEventEmi
 					}
 
 					const authorID = getKeyAuthor(reaction.key);
-					const reactions = ((message.reactions || []) as proto.IReaction[]).filter(
+					const reactions = ((message.reactions || []) as any[]).filter(
 						(r) => getKeyAuthor(r.key) !== authorID,
 					);
 
