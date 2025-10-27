@@ -80,24 +80,22 @@ export default function chatHandler(sessionId: string, event: BaileysEventEmitte
 		for (const update of updates) {
 			try {
 				const data = transformPrisma(update) as MakeTransformedPrisma<Chat>;
-				await model.update({
+
+				const updateData: any = { ...data };
+				if (typeof data.unreadCount === "number") {
+					updateData.unreadCount = data.unreadCount > 0
+						? { increment: data.unreadCount }
+						: { set: data.unreadCount };
+				}
+
+				await model.upsert({
 					select: { pkId: true },
-					data: {
-						...data,
-						unreadCount:
-							typeof data.unreadCount === "number"
-								? data.unreadCount > 0
-									? { increment: data.unreadCount }
-									: { set: data.unreadCount }
-								: undefined,
-					},
+					create: { ...data, id: update.id!, sessionId },
+					update: updateData,
 					where: { sessionId_id: { id: update.id!, sessionId } },
 				});
 				emitEvent("chats.update", sessionId, { chats: data });
 			} catch (e) {
-				if (e instanceof PrismaClientKnownRequestError && e.code === "P2025") {
-					return logger.info({ update }, "Got update for non existent chat");
-				}
 				emitEvent(
 					"chats.update",
 					sessionId,

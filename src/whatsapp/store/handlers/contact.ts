@@ -83,18 +83,16 @@ export default function contactHandler(sessionId: string, event: BaileysEventEmi
 		for (const update of updates) {
 			try {
 				const data = transformPrisma(update);
-				await model.update({
+				await model.upsert({
 					select: { pkId: true },
-					data,
+					create: { ...data, id: update.id!, sessionId },
+					update: data,
 					where: {
 						sessionId_id: { id: update.id!, sessionId },
 					},
 				});
 				emitEvent("contacts.update", sessionId, { contacts: data });
 			} catch (e) {
-				if (e instanceof PrismaClientKnownRequestError && e.code === "P2025") {
-					return logger.info({ update }, "Got update for non existent contact");
-				}
 				logger.error(e, "An error occured during contact update");
 				emitEvent(
 					"contacts.update",

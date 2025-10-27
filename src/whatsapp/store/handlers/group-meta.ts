@@ -42,15 +42,20 @@ export default function groupMetadataHandler(sessionId: string, event: BaileysEv
 		for (const update of updates) {
 			try {
 				const data = transformPrisma(update);
-				await model.update({
+				await model.upsert({
 					select: { pkId: true },
-					data: data,
+					create: {
+						...data,
+						id: update.id!,
+						sessionId,
+						subject: data.subject || '',
+						participants: data.participants || []
+					},
+					update: data,
 					where: { sessionId_id: { id: update.id!, sessionId } },
 				});
 				emitEvent("groups.update", sessionId, { groups: data });
 			} catch (e) {
-				if (e instanceof PrismaClientKnownRequestError && e.code === "P2025")
-					return logger.info({ update }, "Got metadata update for non existent group");
 				logger.error(e, "An error occured during group metadata update");
 				emitEvent(
 					"groups.update",
@@ -113,11 +118,18 @@ export default function groupMetadataHandler(sessionId: string, event: BaileysEv
 			}
 
 			const processedParticipants = transformPrisma({ participants: metadata.participants });
-			await model.update({
-				select: { pkId: true },
-				data: processedParticipants,
-				where: { sessionId_id: { id, sessionId } },
+
+			const existing = await model.findFirst({
+				where: { id, sessionId },
 			});
+
+			if (existing) {
+				await model.update({
+					select: { pkId: true },
+					data: processedParticipants,
+					where: { sessionId_id: { id, sessionId } },
+				});
+			}
 			emitEvent("group-participants.update", sessionId, {
 				groupId: id,
 				action,
